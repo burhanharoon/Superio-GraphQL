@@ -1,7 +1,7 @@
 // import mongoose from 'mongoose';
 // import { composeWithMongoose } from 'graphql-compose-mongoose';
-// import bcrypt from 'bcryptjs'
-// import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs'
+import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose'
 import { composeWithMongoose } from 'graphql-compose-mongoose';
 
@@ -36,78 +36,43 @@ export const UserTC = composeWithMongoose(User);
 
 export default User
 
-// // Encrypting Password Before Saving User
-// UserSchema.pre("save", async function (next) {
-//   if (!this.isModified("password")) {
-//     next();
-//   }
-//   this.password = await bcrypt.hash(this.password, 10);
-// });
+// Login Resolver
+UserTC.addResolver({
+  kind: 'query',
+  name: 'userLogin',
+  args: {
+    identity: 'String!', // For multi-purpose usage as email and username
+    password: 'String!',
+  },
+  // Adding new token field to the User GraphQL type
+  type: UserTC.addFields({
+    'token': 'String!'
+  }).getResolver('findById').getType(),
 
-// UserSchema.methods.comparePassword = function (password) {
-//   return bcrypt.compare(password, this.password)
-// }
+  // Displayes the core functionality of the resolver is inside the resolver
+  resolve: async ({ args }) => {
+    let user = null;
+    if (isNaN(Number(args.identity))) {
 
-// const User = mongoose.model('User', UserSchema);
+      user = await User.findOne({ email: args.identity });
+    } else {
+      user = await User.findOne({ username: args.identity });
+    }
 
-// /* Creating two Type Composers for protected fields i.e 'password' */
-// // Readable Type Composer
-// const UserTC = composeWithMongoose(User, {
-//   name: 'UserInput',
-//   fields: {
-//     remove: ['password']
-//   }
-// });
-// // Writeable Type Composer
-// const UserITC = composeWithMongoose(User)
+    if (!user) {
+      throw new Error('User does not exist.')
+    }
 
-// // Login Resolver
-// UserTC.addResolver({
-//   kind: 'query',
-//   name: 'userLogin',
-//   args: {
-//     identity: 'String!', // For multi-purpose usage as email and username
-//     password: 'String!',
-//   },
-//   // Adding new token field to the User GraphQL type
-//   type: UserTC.addFields({
-//     'token': 'String!'
-//   }).getResolver('findById').getType(),
-//   resolve: async ({ args, context }) => {
-//     let user = null;
-//     if (isNaN(Number(args.identity))) {
-//       user = await User.findOne({ email: args.identity });
-//       // } else {
-//       // user = await User.findOne({ username: args.identity });
-//     }
+    const isEqual = await bcrypt.compareSync(args.password, user.password);
+    if (!isEqual) {
+      throw new Error('Password is not correct.');
+    }
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
+      expiresIn: '24h'
+    });
 
-//     if (!user) {
-//       throw new Error('User does not exist.')
-//     }
+    user.token = token;
 
-//     const isEqual = await bcrypt.compareSync(args.password, user.password);
-//     if (!isEqual) {
-//       throw new Error('Password is not correct.');
-//     }
-//     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
-//       expiresIn: '24h'
-//     });
-
-//     user.token = token;
-
-//     return user;
-//   }
-// })
-
-// // Get authenticated user who's making the requests
-// UserTC.addResolver({
-//   kind: 'query',
-//   name: 'authUser',
-//   // Adding new token field to the User GraphQL type
-//   type: UserTC.getResolver('findById').getType(),
-//   resolve: async ({ args, context }) => {
-//     return (await User.findById(context.userId));
-//   }
-// })
-
-// export default { UserSchema, User, UserTC, UserITC }
+    return user;
+  }
+})

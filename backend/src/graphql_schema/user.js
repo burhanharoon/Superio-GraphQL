@@ -10,8 +10,7 @@ const UserQuery = {
   userCount: UserTC.getResolver('count'),
   userConnection: UserTC.getResolver('connection'),
   userPagination: UserTC.getResolver('pagination'),
-  // userLogin: UserTC.getResolver('userLogin'),
-  // userRegister: UserTC.getResolver('userLogin'),
+  userLogin: UserTC.getResolver('userLogin'),
 };
 
 const UserMutation = {
