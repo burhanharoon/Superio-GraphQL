@@ -1,8 +1,33 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import logo from "../images/login.jpg"
+import { useQuery } from "@apollo/client"
+import { AUTH_LOGIN } from '../services/graphQL/queries/user'
+import { useState } from 'react'
+import { useRouter } from 'next/dist/client/router'
 
 const Login = () => {
+
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [token, setToken] = useState(null);
+    const router = useRouter()
+    const { refetch: queryLogin } = useQuery(AUTH_LOGIN, {
+        fetchPolicy: "network-only",
+        skip: true
+    });
+
+    const loginHandler = async (e) => {
+        e.preventDefault();
+        console.log("Hello");
+        const res = await queryLogin({ email, password })
+        let data = res.data.userLogin;
+        console.log(data);
+        localStorage.setItem('token', data.token);
+        setToken(data.token);
+        router.push('/');
+    }
+
     return (
         <div className="w-full flex sm:p-4" >
             <Link href='/'>
@@ -40,9 +65,9 @@ const Login = () => {
 
                         <form className="flex gap-4 flex-col align-center justify-center">
                             <label htmlFor="username">Username</label>
-                            <input type="text" placeholder="username" className="input input-info input-bordered" />
+                            <input type="text" placeholder="username" className="input input-info input-bordered" onChange={(e) => setEmail(e.target.value)} />
                             <label htmlFor="Password">Password</label>
-                            <input type="password" id="Password" name="Password" placeholder="password" className="input input-info input-bordered" />
+                            <input type="password" id="Password" name="Password" placeholder="password" className="input input-info input-bordered" onChange={(e) => setPassword(e.target.value)} />
                             <div className="flex justify-between items-center sm:w-full sm:text-xs">
                                 <label className="cursor-pointer label flex gap-2 ">
                                     <input type="checkbox" className="checkbox sm:checkbox-xs" />
@@ -50,7 +75,7 @@ const Login = () => {
                                 </label>
                                 <p className='font-bold sm:text-right '>Forgot your password?</p>
                             </div>
-                            <button className="btn btn-block btn-info">LogIn</button>
+                            <button onClick={e => { loginHandler(e) }} className="btn btn-block btn-info">LogIn</button>
                             <Link href='/register'>
                                 <a className="flex justify-center">Don't have an account? Sign up</a>
                             </Link>

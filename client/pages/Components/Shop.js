@@ -1,6 +1,5 @@
 import { useQuery } from "@apollo/client"
 import { useState } from 'react';
-import cloths from '../api/cloths';
 import ShopItem from './ShopItem';
 import { ALL_CLOTHS } from '../services/graphQL/queries/cloth'
 
