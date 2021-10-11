@@ -1,14 +1,13 @@
-import { faTimes, faUserTimes } from '@fortawesome/free-solid-svg-icons';
+import { useQuery } from "@apollo/client"
 import { useState } from 'react';
-import { FaTimes, FaTimesCircle } from 'react-icons/fa';
 import cloths from '../api/cloths';
 import ShopItem from './ShopItem';
+import { ALL_CLOTHS } from '../services/graphQL/queries/cloth'
 
 const Shop = () => {
     const [info, setInfo] = useState(true)
-    const handleInfo = () => {
-        setInfo(false)
-    }
+    const { data } = useQuery(ALL_CLOTHS)
+
     return (
         <div>
             <div className='w-full bg-gray-50 flex flex-col gap-1 justify-center items-center shadow-inner h-40'>
@@ -27,12 +26,12 @@ const Shop = () => {
                             </svg>
                             <label>Click on the product below to open its respective page!</label>
                         </div>
-                        <span onClick={handleInfo} className='text-2xl cursor-pointer'>×</span>
+                        <span onClick={() => { setInfo(false) }} className='text-2xl cursor-pointer'>×</span>
                     </div>
                 </div>
 
                 <div className='flex items-center sm:flex-col sm:gap-4 justify-between pr-12 pl-12'>
-                    <div>Showing <strong> {cloths.length}</strong> of  <strong> {cloths.length}</strong> results</div>
+                    <div>Showing <strong> {data?.clothMany.length}</strong> of  <strong> {data?.clothMany.length}</strong> results</div>
 
                     <div className='flex gap-4 '>
                         <select defaultValue="Most Recent" className="font-normal bg-gray-100 border-none select focus:border-gray-300 max-w-xs ">
@@ -50,9 +49,9 @@ const Shop = () => {
 
                 <div className='flex flex-row flex-wrap justify-center p-8'>
 
-                    {cloths.map(cloth => {
+                    {data?.clothMany.map(cloth => {
                         return (
-                            <ShopItem key={cloth.id} id={cloth.id} image={cloth.image} title={cloth.title} price={cloth.price} />
+                            <ShopItem key={cloth?._id} id={cloth?._id} image={cloth?.image} title={cloth?.title} price={cloth?.price} />
                         )
                     })}
                 </div>

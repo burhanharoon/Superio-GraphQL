@@ -3,9 +3,6 @@ import { composeWithMongoose } from 'graphql-compose-mongoose';
 
 const featuredCandidateSchema = mongoose.Schema(
     {
-        id: {
-            type: mongoose.Schema.Types.ObjectId
-        },
         name: {
             type: String,
             required: true,
